@@ -494,6 +494,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
     end
 
     sound:Play()
+    local songStartClock = os.clock()
 
     local fadeInTween = TweenService:Create(sound, TweenInfo.new(5, Enum.EasingStyle.Linear), { Volume = musicVolume })
     fadeInTween:Play()
@@ -514,7 +515,8 @@ local function PlaySoundCycle(isRetryingCurrentSong)
     end
 
     sound.Ended:Connect(function()
-        local reachedEnd = sound.TimeLength <= 0 or sound.TimePosition >= sound.TimeLength - 1
+        local playedFullLength = sound.TimeLength > 0 and (os.clock() - songStartClock) >= sound.TimeLength - 2
+        local reachedEnd = sound.TimeLength <= 0 or sound.TimePosition >= sound.TimeLength - 1 or playedFullLength
         FinishSong(reachedEnd)
     end)
 
