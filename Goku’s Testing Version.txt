@@ -395,7 +395,7 @@ local musicSongs = {
     { name = "do i clench my fists?", file = "ClenchMyFists.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/do%20i%20clench%20my%20fists%3F.mp3" },
     { name = "lucy~", file = "Lucy.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/lucy%7E.mp3" },
     { name = "im a mistake", file = "ImAMistake.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Im%20a%20mistake.mp3" },
-    { name = "resonance - home (slowed & reverb)", file = "ResonanceHome.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/resonance%20-%20home%20(slowed%20%26%20reverb).mp3" },
+    { name = "resonance - home", file = "ResonanceHome.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/resonance%20-%20home%20(slowed%20%26%20reverb).mp3" },
     { name = "Clouds", file = "Clouds.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Clouds.mp3" },
     { name = "yves tumor - limerence", file = "YvesTumorLimerence.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/yves%20tumor%20-%20limerence%20(instrumental).mp3" },
     { name = "Waiting", file = "Waiting.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Waiting.mp3" },
