@@ -1,4 +1,5 @@
-local graphicsAPI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Sunset"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Leap%26UI"))()
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players        = game:GetService("Players")
 local Debris         = game:GetService("Debris")
@@ -589,6 +590,18 @@ task.spawn(function()
         rainAPI:Disable()
     end
 
+    -- Sunset (lighting / skybox / clouds / lens flare) exposes _G.SunsetQuality.
+    -- It loads in its own thread so the panel doesn't wait on the download.
+    _G.SunsetQualityState = _G.SunsetQualityState or "Max"
+    task.spawn(function()
+        local sunsetLoaded, sunsetError = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Sunset"))()
+        end)
+        if not sunsetLoaded then
+            warn("[Panel] Sunset failed to load: " .. tostring(sunsetError))
+        end
+    end)
+
     local lightingService = game:GetService("Lighting")
     local tweenService = game:GetService("TweenService")
     local soundService = game:GetService("SoundService")
@@ -658,6 +671,12 @@ task.spawn(function()
 
     local graphicsQualityOptions = {"Performance", "Medium", "Max"}
     local graphicsQualityIndex = 3
+    for optionIndex, optionName in ipairs(graphicsQualityOptions) do
+        if optionName:lower() == tostring(_G.SunsetQualityState):lower() then
+            graphicsQualityIndex = optionIndex
+        end
+    end
+    settingsState.graphicsQuality = graphicsQualityOptions[graphicsQualityIndex]
 
     local musicVolumeOptions = {
         { label = "Max", value = 1.75 },
@@ -980,11 +999,20 @@ task.spawn(function()
         Scale = 1,
     })
 
+    local function ApplyGraphicsQuality()
+        local sunsetQuality = _G.SunsetQuality
+        if not sunsetQuality then
+            warn("[Panel] Sunset isn't loaded yet - graphics quality not applied")
+            return
+        end
+        if sunsetQuality.Get() ~= settingsState.graphicsQuality then
+            task.spawn(sunsetQuality.Set, settingsState.graphicsQuality)
+        end
+    end
+
     applyButton.Activated:Connect(function()
         playNextSound()
-        task.spawn(function()
-            graphicsAPI:SetQuality(settingsState.graphicsQuality)
-        end)
+        ApplyGraphicsQuality()
         applyPulseOutTween:Play()
         applyPulseOutTween.Completed:Wait()
         applyPulseBackTween:Play()
@@ -1102,7 +1130,46 @@ task.spawn(function()
     closeButton.Activated:Connect(playNextSound)
     closeButton.Activated:Connect(Exit)
 
-    Open()
+    -- The panel no longer opens on its own: it opens when the in-game Menu
+    -- button (PlayerGui.Main.NewHud.Here.Info.Menu) is pressed. If the HUD gets
+    -- rebuilt (e.g. on respawn) the button is found again and re-bound.
+    local function OpenFromMenu()
+        if overlayGui.Enabled then
+            return
+        end
+        Open()
+    end
+
+    task.spawn(function()
+        local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+        while true do
+            local menuButton = playerGui
+                :WaitForChild("Main")
+                :WaitForChild("NewHud")
+                :WaitForChild("Here")
+                :WaitForChild("Info")
+                :WaitForChild("Menu")
+
+            local menuConnection
+            if menuButton:IsA("GuiButton") then
+                menuConnection = menuButton.Activated:Connect(OpenFromMenu)
+            else
+                menuConnection = menuButton.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1
+                        or input.UserInputType == Enum.UserInputType.Touch then
+                        OpenFromMenu()
+                    end
+                end)
+            end
+
+            repeat
+                menuButton.AncestryChanged:Wait()
+            until not menuButton:IsDescendantOf(game)
+
+            menuConnection:Disconnect()
+            task.wait()
+        end
+    end)
 end)
 
 local function EmitVFX(vfxTemplate, emitCount, keepEnabled)
