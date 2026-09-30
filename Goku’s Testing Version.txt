@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Sunset"))()
+local graphicsAPI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Sunset"))()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players        = game:GetService("Players")
 local Debris         = game:GetService("Debris")
@@ -444,6 +444,7 @@ local currentSongIndex       = nil
 local usedStartingSong       = false
 local currentMusicSound      = nil
 local prematureEndRetryCount = 0
+local currentFadeInTween      = nil
 
 local function FindSongIndexByName(name)
     for i, song in ipairs(musicSongs) do
@@ -488,7 +489,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
     currentMusicSound = sound
 
     WaitForSoundToLoad(sound, 5)
-    if not musicActive then
+    if not musicActive or not sound.Parent then
         sound:Destroy()
         return
     end
@@ -497,6 +498,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
     local songStartClock = os.clock()
 
     local fadeInTween = TweenService:Create(sound, TweenInfo.new(5, Enum.EasingStyle.Linear), { Volume = musicVolume })
+    currentFadeInTween = fadeInTween
     fadeInTween:Play()
 
     local songFinished = false
@@ -559,10 +561,548 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/Vegit
 loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/THE-Script/refs/heads/main/SpiritBomb"))()
 end)
 
-task.delay(2, function()
-    if _G.Rain then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/GOKU/refs/heads/main/RAIN%20MODULE"))()
+task.spawn(function()
+    local imageUrl = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Borders.png"
+    local savedFileName = "Borders.png"
+
+    local imageData = game:HttpGet(imageUrl)
+    writefile(savedFileName, imageData)
+    local customAssetId = getcustomasset(savedFileName)
+
+    local characterImageUrl = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/IMG_5452.png"
+    local characterSavedFileName = "IMG_5452.png"
+    writefile(characterSavedFileName, game:HttpGet(characterImageUrl))
+    local characterCustomAssetId = getcustomasset(characterSavedFileName)
+
+    local openSoundUrl = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Open.mp3"
+    local openSoundSavedFileName = "Open.mp3"
+    writefile(openSoundSavedFileName, game:HttpGet(openSoundUrl))
+    local openSoundCustomAssetId = getcustomasset(openSoundSavedFileName)
+
+    local nextSoundUrl = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Next.mp3"
+    local nextSoundSavedFileName = "Next.mp3"
+    writefile(nextSoundSavedFileName, game:HttpGet(nextSoundUrl))
+    local nextSoundCustomAssetId = getcustomasset(nextSoundSavedFileName)
+
+    local rainAPI = loadstring(game:HttpGet("https://raw.githubusercontent.com/NetlessScripter/GOKU/refs/heads/main/RAIN%20MODULE"))()
+    if _G.Rain == false then
+        rainAPI:Disable()
     end
+
+    local lightingService = game:GetService("Lighting")
+    local tweenService = game:GetService("TweenService")
+    local soundService = game:GetService("SoundService")
+
+    local existingGui = (gethui and gethui() or game:GetService("CoreGui")):FindFirstChild("BordersOverlayGui")
+    if existingGui then
+        existingGui:Destroy()
+    end
+
+    local existingBlur = lightingService:FindFirstChild("BordersBlurEffect")
+    if existingBlur then
+        existingBlur:Destroy()
+    end
+
+    local existingOpenSound = soundService:FindFirstChild("BordersOpenSound")
+    if existingOpenSound then
+        existingOpenSound:Destroy()
+    end
+
+    local existingNextSound = soundService:FindFirstChild("BordersNextSound")
+    if existingNextSound then
+        existingNextSound:Destroy()
+    end
+
+    local overlayGui = Instance.new("ScreenGui")
+    overlayGui.Name = "BordersOverlayGui"
+    overlayGui.IgnoreGuiInset = true
+    overlayGui.ScreenInsets = Enum.ScreenInsets.None
+    overlayGui.ResetOnSpawn = false
+    overlayGui.DisplayOrder = 2147483647
+    overlayGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    overlayGui.Enabled = false
+
+    local borderImage = Instance.new("ImageLabel")
+    borderImage.Name = "BordersImage"
+    borderImage.BackgroundTransparency = 1
+    borderImage.BorderSizePixel = 0
+    borderImage.ZIndex = 2147483646
+    borderImage.Image = customAssetId
+    borderImage.ScaleType = Enum.ScaleType.Stretch
+    borderImage.AnchorPoint = Vector2.new(0.5, 0.5)
+    borderImage.Size = UDim2.new(4, 0, 4, 0)
+    borderImage.Position = UDim2.new(0.5, 0, 0.5, 0)
+    borderImage.Parent = overlayGui
+
+    local characterImage = Instance.new("ImageLabel")
+    characterImage.Name = "CharacterImage"
+    characterImage.BackgroundTransparency = 1
+    characterImage.BorderSizePixel = 0
+    characterImage.ZIndex = 2147483647
+    characterImage.Image = characterCustomAssetId
+    characterImage.ScaleType = Enum.ScaleType.Stretch
+    characterImage.AnchorPoint = Vector2.new(0, 0)
+    characterImage.Size = UDim2.new(1, 0, 1, 0)
+    characterImage.Position = UDim2.new(0, 0, 0, 945)
+    characterImage.Parent = overlayGui
+
+    local characterAspectRatio = Instance.new("UIAspectRatioConstraint")
+    characterAspectRatio.AspectRatio = 1261 / 1247
+    characterAspectRatio.Parent = characterImage
+
+    local settingsState = {
+        rainDisabled = (_G.Rain == false),
+        graphicsQuality = "Max",
+        musicVolume = (_G.Music == false) and "Disabled" or 1.75,
+    }
+
+    local graphicsQualityOptions = {"Performance", "Medium", "Max"}
+    local graphicsQualityIndex = 3
+
+    local musicVolumeOptions = {
+        { label = "Max", value = 1.75 },
+        { label = "Medium", value = 0.65 },
+        { label = "None", value = "Disabled" },
+    }
+    local musicVolumeIndex = (_G.Music == false) and 3 or 1
+
+    local function SetMusicVolume(newVolume)
+        musicVolume = newVolume
+        if currentFadeInTween then
+            currentFadeInTween:Cancel()
+            currentFadeInTween = nil
+        end
+
+        local activeSound = currentMusicSound
+        if activeSound and activeSound.Parent then
+            local inLucyFadeOut = activeSound.Name:lower() == "lucy~" and activeSound.TimePosition >= LucyFadeOutStart
+            if not inLucyFadeOut then
+                activeSound.Volume = newVolume
+            end
+        end
+    end
+
+    local function SetMusicEnabled(enabled)
+        if enabled then
+            _G.Music = true
+            musicActive = true
+            if not currentMusicSound or not currentMusicSound.Parent then
+                task.spawn(PlaySoundCycle)
+            end
+        else
+            _G.Music = false
+            musicActive = false
+            if currentMusicSound then
+                currentMusicSound:Stop()
+                currentMusicSound:Destroy()
+                currentMusicSound = nil
+            end
+        end
+    end
+
+    local settingRowDefinitions = {
+        {
+            labelText = "Rain",
+            getValueText = function()
+                return settingsState.rainDisabled and "Disabled" or "Enabled"
+            end,
+            onActivated = function()
+                settingsState.rainDisabled = not settingsState.rainDisabled
+                _G.Rain = not settingsState.rainDisabled
+                if settingsState.rainDisabled then
+                    rainAPI:Disable()
+                else
+                    rainAPI:Enable()
+                end
+            end,
+        },
+        {
+            labelText = "Graphics Quality",
+            getValueText = function()
+                return graphicsQualityOptions[graphicsQualityIndex]
+            end,
+            onActivated = function()
+                graphicsQualityIndex = graphicsQualityIndex % #graphicsQualityOptions + 1
+                settingsState.graphicsQuality = graphicsQualityOptions[graphicsQualityIndex]
+            end,
+        },
+        {
+            labelText = "Music Volume",
+            getValueText = function()
+                return musicVolumeOptions[musicVolumeIndex].label
+            end,
+            onActivated = function()
+                musicVolumeIndex = musicVolumeIndex % #musicVolumeOptions + 1
+                settingsState.musicVolume = musicVolumeOptions[musicVolumeIndex].value
+                if settingsState.musicVolume == "Disabled" then
+                    SetMusicEnabled(false)
+                else
+                    SetMusicVolume(settingsState.musicVolume)
+                    SetMusicEnabled(true)
+                end
+            end,
+        },
+    }
+
+    local nextSound = Instance.new("Sound")
+    nextSound.Name = "BordersNextSound"
+    nextSound.SoundId = nextSoundCustomAssetId
+    nextSound.Volume = 1
+    nextSound.Parent = soundService
+
+    local function playNextSound()
+        nextSound.TimePosition = 0
+        nextSound:Play()
+    end
+
+    local settingsFont = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+
+    local headerColor = Color3.fromRGB(232, 112, 32)
+    local headerStrokeColor = Color3.fromRGB(120, 48, 16)
+    local rowBackgroundColor = Color3.fromRGB(78, 52, 44)
+    local rowStrokeColor = Color3.fromRGB(214, 110, 58)
+    local highlightColor = Color3.fromRGB(238, 204, 34)
+    local valueBoxColor = Color3.fromRGB(50, 34, 30)
+    local normalTextColor = Color3.fromRGB(255, 255, 255)
+    local selectedTextColor = Color3.fromRGB(88, 56, 16)
+
+    local settingsPanelOpenPosition = UDim2.new(0.73, 0, 0.5, 0)
+    local settingsPanelClosedPosition = UDim2.new(1.3, 0, 0.5, 0)
+
+    local settingsPanel = Instance.new("Frame")
+    settingsPanel.Name = "SettingsPanel"
+    settingsPanel.BackgroundTransparency = 1
+    settingsPanel.BorderSizePixel = 0
+    settingsPanel.ZIndex = 2147483647
+    settingsPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+    settingsPanel.Size = UDim2.new(0.4, 0, 0.4, 0)
+    settingsPanel.Position = settingsPanelClosedPosition
+    settingsPanel.Parent = overlayGui
+
+    local panelListLayout = Instance.new("UIListLayout")
+    panelListLayout.Padding = UDim.new(0.02, 0)
+    panelListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    panelListLayout.Parent = settingsPanel
+
+    local headerBar = Instance.new("Frame")
+    headerBar.Name = "HeaderBar"
+    headerBar.LayoutOrder = 0
+    headerBar.BackgroundColor3 = headerColor
+    headerBar.BorderSizePixel = 0
+    headerBar.Size = UDim2.new(1, 0, 0.16, 0)
+    headerBar.Parent = settingsPanel
+
+    local headerStroke = Instance.new("UIStroke")
+    headerStroke.Color = headerStrokeColor
+    headerStroke.Thickness = 2
+    headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    headerStroke.Parent = headerBar
+
+    local headerTitle = Instance.new("TextLabel")
+    headerTitle.Name = "HeaderTitle"
+    headerTitle.BackgroundTransparency = 1
+    headerTitle.AnchorPoint = Vector2.new(0.5, 0.5)
+    headerTitle.Position = UDim2.new(0.5, 0, 0.5, 0)
+    headerTitle.Size = UDim2.new(0.9, 0, 0.6, 0)
+    headerTitle.FontFace = settingsFont
+    headerTitle.Text = "Settings"
+    headerTitle.TextColor3 = normalTextColor
+    headerTitle.TextStrokeColor3 = Color3.new(0, 0, 0)
+    headerTitle.TextStrokeTransparency = 0
+    headerTitle.TextScaled = true
+    headerTitle.Parent = headerBar
+
+    local headerTextConstraint = Instance.new("UITextSizeConstraint")
+    headerTextConstraint.MaxTextSize = 28
+    headerTextConstraint.Parent = headerTitle
+
+    local settingRows = {}
+    local selectedRowIndex = 1
+
+    local function refreshRowVisuals()
+        for rowIndex, rowVisuals in ipairs(settingRows) do
+            local isSelected = rowIndex == selectedRowIndex
+            rowVisuals.highlight.Visible = isSelected
+            rowVisuals.label.TextColor3 = isSelected and selectedTextColor or normalTextColor
+        end
+    end
+
+    local function createSettingRow(rowIndex, rowDefinition)
+        local rowButton = Instance.new("TextButton")
+        rowButton.Name = "SettingRow" .. rowIndex
+        rowButton.LayoutOrder = rowIndex
+        rowButton.AutoButtonColor = false
+        rowButton.Text = ""
+        rowButton.BackgroundColor3 = rowBackgroundColor
+        rowButton.BorderSizePixel = 0
+        rowButton.Size = UDim2.new(1, 0, 0.16, 0)
+        rowButton.Parent = settingsPanel
+
+        local rowStroke = Instance.new("UIStroke")
+        rowStroke.Color = rowStrokeColor
+        rowStroke.Thickness = 1
+        rowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        rowStroke.Parent = rowButton
+
+        local highlight = Instance.new("Frame")
+        highlight.Name = "Highlight"
+        highlight.BackgroundColor3 = highlightColor
+        highlight.BorderSizePixel = 0
+        highlight.Size = UDim2.new(1, 0, 1, 0)
+        highlight.ZIndex = 1
+        highlight.Parent = rowButton
+
+        local highlightGradient = Instance.new("UIGradient")
+        highlightGradient.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 0),
+            NumberSequenceKeypoint.new(0.6, 0.55),
+            NumberSequenceKeypoint.new(1, 1),
+        })
+        highlightGradient.Parent = highlight
+
+        local label = Instance.new("TextLabel")
+        label.Name = "Label"
+        label.BackgroundTransparency = 1
+        label.AnchorPoint = Vector2.new(0, 0.5)
+        label.Position = UDim2.new(0.04, 0, 0.5, 0)
+        label.Size = UDim2.new(0.5, 0, 0.5, 0)
+        label.FontFace = settingsFont
+        label.Text = rowDefinition.labelText
+        label.TextColor3 = normalTextColor
+        label.TextStrokeColor3 = Color3.new(0, 0, 0)
+        label.TextStrokeTransparency = 0
+        label.TextScaled = true
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.ZIndex = 2
+        label.Parent = rowButton
+
+        local labelTextConstraint = Instance.new("UITextSizeConstraint")
+        labelTextConstraint.MaxTextSize = 22
+        labelTextConstraint.Parent = label
+
+        local valueBox = Instance.new("Frame")
+        valueBox.Name = "ValueBox"
+        valueBox.BackgroundColor3 = valueBoxColor
+        valueBox.BorderSizePixel = 0
+        valueBox.AnchorPoint = Vector2.new(1, 0.5)
+        valueBox.Position = UDim2.new(0.97, 0, 0.5, 0)
+        valueBox.Size = UDim2.new(0.4, 0, 0.7, 0)
+        valueBox.ZIndex = 2
+        valueBox.Parent = rowButton
+
+        local valueLabel = Instance.new("TextLabel")
+        valueLabel.Name = "ValueLabel"
+        valueLabel.BackgroundTransparency = 1
+        valueLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+        valueLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+        valueLabel.Size = UDim2.new(0.9, 0, 0.6, 0)
+        valueLabel.FontFace = settingsFont
+        valueLabel.Text = rowDefinition.getValueText()
+        valueLabel.TextColor3 = normalTextColor
+        valueLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        valueLabel.TextStrokeTransparency = 0
+        valueLabel.TextScaled = true
+        valueLabel.Parent = valueBox
+
+        local valueTextConstraint = Instance.new("UITextSizeConstraint")
+        valueTextConstraint.MaxTextSize = 22
+        valueTextConstraint.Parent = valueLabel
+
+        rowButton.Activated:Connect(function()
+            playNextSound()
+            selectedRowIndex = rowIndex
+            rowDefinition.onActivated()
+            valueLabel.Text = rowDefinition.getValueText()
+            refreshRowVisuals()
+        end)
+
+        settingRows[rowIndex] = {
+            highlight = highlight,
+            label = label,
+        }
+    end
+
+    for rowIndex, rowDefinition in ipairs(settingRowDefinitions) do
+        createSettingRow(rowIndex, rowDefinition)
+    end
+
+    refreshRowVisuals()
+
+    local buttonRow = Instance.new("Frame")
+    buttonRow.Name = "ButtonRow"
+    buttonRow.LayoutOrder = #settingRowDefinitions + 1
+    buttonRow.BackgroundTransparency = 1
+    buttonRow.BorderSizePixel = 0
+    buttonRow.Size = UDim2.new(1, 0, 0.16, 0)
+    buttonRow.Parent = settingsPanel
+
+    local function createActionButton(buttonName, buttonText, horizontalAlignment)
+        local actionButton = Instance.new("TextButton")
+        actionButton.Name = buttonName
+        actionButton.AutoButtonColor = false
+        actionButton.BackgroundColor3 = headerColor
+        actionButton.BorderSizePixel = 0
+        actionButton.AnchorPoint = Vector2.new(horizontalAlignment, 0.5)
+        actionButton.Position = UDim2.new(horizontalAlignment, 0, 0.5, 0)
+        actionButton.Size = UDim2.new(0.48, 0, 1, 0)
+        actionButton.FontFace = settingsFont
+        actionButton.Text = buttonText
+        actionButton.TextColor3 = normalTextColor
+        actionButton.TextStrokeColor3 = Color3.new(0, 0, 0)
+        actionButton.TextStrokeTransparency = 0
+        actionButton.TextScaled = true
+        actionButton.Parent = buttonRow
+
+        local actionButtonStroke = Instance.new("UIStroke")
+        actionButtonStroke.Color = headerStrokeColor
+        actionButtonStroke.Thickness = 2
+        actionButtonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        actionButtonStroke.Parent = actionButton
+
+        local actionButtonTextConstraint = Instance.new("UITextSizeConstraint")
+        actionButtonTextConstraint.MaxTextSize = 20
+        actionButtonTextConstraint.Parent = actionButton
+
+        return actionButton
+    end
+
+    local applyButton = createActionButton("ApplyButton", "Apply", 0)
+    local closeButton = createActionButton("CloseButton", "Close", 1)
+
+    local applyButtonScale = Instance.new("UIScale")
+    applyButtonScale.Scale = 1
+    applyButtonScale.Parent = applyButton
+
+    local applyPulseOutTween = tweenService:Create(applyButtonScale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Scale = 1.12,
+    })
+    local applyPulseBackTween = tweenService:Create(applyButtonScale, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Scale = 1,
+    })
+
+    applyButton.Activated:Connect(function()
+        playNextSound()
+        task.spawn(function()
+            graphicsAPI:SetQuality(settingsState.graphicsQuality)
+        end)
+        applyPulseOutTween:Play()
+        applyPulseOutTween.Completed:Wait()
+        applyPulseBackTween:Play()
+    end)
+
+    local blurEffect = Instance.new("BlurEffect")
+    blurEffect.Name = "BordersBlurEffect"
+    blurEffect.Size = 0
+    blurEffect.Parent = lightingService
+
+    local openSound = Instance.new("Sound")
+    openSound.Name = "BordersOpenSound"
+    openSound.SoundId = openSoundCustomAssetId
+    openSound.Volume = 1
+    openSound.Parent = soundService
+
+    overlayGui.Parent = gethui and gethui() or game:GetService("CoreGui")
+
+    local shrinkTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
+    local blurTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+    local riseTweenInfo = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0.25)
+
+    local descendTweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+    local expandTweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Cubic, Enum.EasingDirection.In, 0, false, 0.3)
+    local unblurTweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0.3)
+
+    local fovOpenTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+    local fovCloseTweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0.3)
+
+    local panelOpenTweenInfo = TweenInfo.new(0.9, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, 0.35)
+    local panelCloseTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.In)
+
+    local openFieldOfView = 80
+    local originalFieldOfView = nil
+
+    local activeTweens = {}
+
+    local function cancelActiveTweens()
+        for _, activeTween in ipairs(activeTweens) do
+            activeTween:Cancel()
+        end
+        table.clear(activeTweens)
+    end
+
+    local function playTween(targetInstance, tweenInfo, goalProperties)
+        local newTween = tweenService:Create(targetInstance, tweenInfo, goalProperties)
+        table.insert(activeTweens, newTween)
+        newTween:Play()
+        return newTween
+    end
+
+    local function Open()
+        cancelActiveTweens()
+
+        borderImage.Size = UDim2.new(4, 0, 4, 0)
+        characterImage.Position = UDim2.new(0, 0, 0, 945)
+        blurEffect.Size = 0
+        settingsPanel.Position = settingsPanelClosedPosition
+        overlayGui.Enabled = true
+
+        openSound.TimePosition = 0
+        openSound:Play()
+
+        playTween(borderImage, shrinkTweenInfo, {
+            Size = UDim2.new(1, 0, 1, 0),
+        })
+        playTween(blurEffect, blurTweenInfo, {
+            Size = 24,
+        })
+        playTween(characterImage, riseTweenInfo, {
+            Position = UDim2.new(0, 0, 0, 0),
+        })
+        playTween(settingsPanel, panelOpenTweenInfo, {
+            Position = settingsPanelOpenPosition,
+        })
+
+        local currentCamera = workspace.CurrentCamera
+        if originalFieldOfView == nil then
+            originalFieldOfView = currentCamera.FieldOfView
+        end
+        playTween(currentCamera, fovOpenTweenInfo, {
+            FieldOfView = openFieldOfView,
+        })
+    end
+
+    local function Exit()
+        cancelActiveTweens()
+
+        playTween(characterImage, descendTweenInfo, {
+            Position = UDim2.new(0, 0, 0, 945),
+        })
+        playTween(settingsPanel, panelCloseTweenInfo, {
+            Position = settingsPanelClosedPosition,
+        })
+        local expandTween = playTween(borderImage, expandTweenInfo, {
+            Size = UDim2.new(4, 0, 4, 0),
+        })
+        playTween(blurEffect, unblurTweenInfo, {
+            Size = 0,
+        })
+
+        local currentCamera = workspace.CurrentCamera
+        playTween(currentCamera, fovCloseTweenInfo, {
+            FieldOfView = originalFieldOfView or currentCamera.FieldOfView,
+        })
+
+        expandTween.Completed:Connect(function(playbackState)
+            if playbackState == Enum.PlaybackState.Completed then
+                overlayGui.Enabled = false
+                originalFieldOfView = nil
+            end
+        end)
+    end
+
+    closeButton.Activated:Connect(playNextSound)
+    closeButton.Activated:Connect(Exit)
+
+    Open()
 end)
 
 local function EmitVFX(vfxTemplate, emitCount, keepEnabled)
