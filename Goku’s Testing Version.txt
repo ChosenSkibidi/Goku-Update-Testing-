@@ -404,6 +404,20 @@ local musicSongs = {
     { name = "EYEDRESS - JEALOUS", file = "EyedressJealous.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/EYEDRESS%20-%20JEALOUS%20(OFFICIAL%20VIDEO).mp3" },
     { name = "oblivion", file = "oblivion.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/hozuki%2C%20cornwave%20-%20oblivion.mp3" },
     { name = "where am i supposed to go", file = "WhereAmISupposedToGo.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/where%20am%20i%20supposed%20to%20go.mp3" },
+    { name = "The Path Less Travelled", file = "ThePathLessTravelled.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/The%20Path%20Less%20Travelled.mp3" },
+}
+
+-- Dragon Ball music pack (DLC). Downloaded on demand from the panel's DLC tab.
+-- While it is the active pack, the shuffle draws from this list only.
+local dbSongs = {
+    { name = "Super Saiyan", file = "DBPack_SuperSaiyan.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/DBZ%20Goku%20Super%20Saiyan%20Theme.mp3" },
+    { name = "Sparking Battle", file = "DBPack_SparkingBattle.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/DRAGON%20BALL%20Sparking!%20ZERO%20BGM%20%20OST%20(HQ)%20-%20DRAGON%20BALL%20Sparking!%20ZERO%20(Battle%20Version).mp3" },
+    { name = "Fighting Spirit", file = "DBPack_FightingSpirit.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/DRAGON%20BALL%20Sparking!%20ZERO%20BGM%20%20OST%20(HQ)%20-%20Fighting%20Spirit.mp3" },
+    { name = "Final Battle", file = "DBPack_FinalBattle.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/DRAGON%20BALL%20Sparking!%20ZERO%20BGM%20%20OST%20(HQ)%20-%20The%20Final%20Battle.mp3" },
+    { name = "Vegito Vs Zamasu", file = "DBPack_VegitoVsZamasu.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/Dragon%20Ball%20Super%20-%20OST%20-%20VegettoVegito%20Vs%20Zamasu%20Theme%20%5BHD%5D.mp3" },
+    { name = "Super Saiyan Blue", file = "DBPack_SuperSaiyanBlue.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/Dragon%20Ball%20Super%20OST%20Blue%20Saiyan.mp3" },
+    { name = "The Earth's Fate", file = "DBPack_TheEarthsFate.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/The%20Earths%20Fate.mp3" },
+    { name = "Trouble Erupts", file = "DBPack_TroubleErupts.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/DBSZ-Songs/refs/heads/main/Dragon%20ball%20Super%20OST%20-%20Trouble%20Erupts!%20(Goku%20vs%20Hit).mp3" },
 }
 
 local function DownloadSongFile(url, filename)
@@ -414,6 +428,73 @@ local function DownloadSongFile(url, filename)
     local readOk, contents = pcall(readfile, filename)
     if not readOk or #contents < minValidSongFileBytes then
         writefile(filename, game:HttpGet(url))
+    end
+end
+
+-- Install record. Every install writes this JSON file:
+--   { "count": <how many pack songs are installed>, "installed": [ <their names> ] }
+local dbPackManifestFile = "DBMusicPack.json"
+
+-- Returns the recorded names as a set. A missing or unreadable file = nothing recorded.
+local function ReadDbPackManifest()
+    local recorded = {}
+    if not isfile(dbPackManifestFile) then return recorded end
+
+    local readOk, decoded = pcall(function()
+        return game:GetService("HttpService"):JSONDecode(readfile(dbPackManifestFile))
+    end)
+    if readOk and type(decoded) == "table" and type(decoded.installed) == "table" then
+        for _, name in ipairs(decoded.installed) do
+            recorded[name] = true
+        end
+    end
+    return recorded
+end
+
+-- Adds one song to the record and rewrites the JSON (count + names, in pack order).
+-- Names whose file has since gone missing are dropped so the record stays truthful.
+local function RecordDbPackSongInstalled(songName)
+    local recorded = ReadDbPackManifest()
+    recorded[songName] = true
+
+    local names = {}
+    for _, song in ipairs(dbSongs) do
+        if recorded[song.name] and (song.name == songName or isfile(song.file)) then
+            table.insert(names, song.name)
+        end
+    end
+
+    writefile(dbPackManifestFile, game:GetService("HttpService"):JSONEncode({
+        count = #names,
+        installed = names,
+    }))
+end
+
+-- Checks the script's pack list against the record. Returns the names that are
+-- installed and the songs that still need installing (new songs added to the
+-- script, or ones whose file is gone).
+local function GetDbPackStatus()
+    local recorded = ReadDbPackManifest()
+    local installedNames = {}
+    local missingSongs = {}
+    for _, song in ipairs(dbSongs) do
+        if recorded[song.name] and isfile(song.file) then
+            table.insert(installedNames, song.name)
+        else
+            table.insert(missingSongs, song)
+        end
+    end
+    return installedNames, missingSongs
+end
+
+-- Downloads one pack song and checks the file is real (a failed download can
+-- leave a tiny error page behind - that gets deleted so it can't pass as installed).
+local function InstallDbPackSong(song)
+    DownloadSongFile(song.url, song.file)
+    local readOk, contents = pcall(readfile, song.file)
+    if not readOk or #contents < minValidSongFileBytes then
+        pcall(delfile, song.file)
+        error("downloaded file was invalid")
     end
 end
 
@@ -447,9 +528,19 @@ local usedStartingSong       = false
 local currentMusicSound      = nil
 local prematureEndRetryCount = 0
 local currentFadeInTween      = nil
+local playbackGeneration     = 0
+
+-- Which pack the shuffle draws from: "Regular" (musicSongs) or "DB" (dbSongs).
+-- Only one is ever active; picking a song from the other pack's dropdown
+-- switches it on and this one off.
+local activePack = "Regular"
+
+local function GetSongsForPack(packName)
+    return packName == "DB" and dbSongs or musicSongs
+end
 
 local function FindSongIndexByName(name)
-    for i, song in ipairs(musicSongs) do
+    for i, song in ipairs(GetSongsForPack(activePack)) do
         if song.name:lower() == name:lower() then
             return i
         end
@@ -458,18 +549,29 @@ local function FindSongIndexByName(name)
 end
 
 local function PickNextSongIndex()
-    if #musicSongs == 1 then return 1 end
+    local songCount = #GetSongsForPack(activePack)
+    if songCount == 1 then return 1 end
     local index
     repeat
-        index = math.random(#musicSongs)
+        index = math.random(songCount)
     until index ~= currentSongIndex
     return index
 end
 
-local function PlaySoundCycle(isRetryingCurrentSong)
+local function PlaySoundCycle(isRetryingCurrentSong, forcedSongIndex)
     if not musicActive then return end
 
-    if isRetryingCurrentSong then
+    -- Every cycle gets a generation number. If something newer starts (a song
+    -- picked from the panel, music toggled off/on) the older cycle sees the
+    -- mismatch and stops itself instead of chaining into another random song.
+    playbackGeneration = playbackGeneration + 1
+    local myGeneration = playbackGeneration
+
+    if forcedSongIndex then
+        prematureEndRetryCount = 0
+        usedStartingSong = true
+        currentSongIndex = forcedSongIndex
+    elseif isRetryingCurrentSong then
         prematureEndRetryCount = prematureEndRetryCount + 1
     else
         prematureEndRetryCount = 0
@@ -482,7 +584,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
         end
     end
 
-    local entry = musicSongs[currentSongIndex]
+    local entry = GetSongsForPack(activePack)[currentSongIndex]
     print("[Music] Now playing: " .. entry.name)
 
     local sound = GetGitSound(entry.url, entry.file)
@@ -491,7 +593,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
     currentMusicSound = sound
 
     WaitForSoundToLoad(sound, 5)
-    if not musicActive or not sound.Parent then
+    if not musicActive or not sound.Parent or myGeneration ~= playbackGeneration then
         sound:Destroy()
         return
     end
@@ -510,6 +612,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
         sound:Destroy()
 
         if not musicActive then return end
+        if myGeneration ~= playbackGeneration then return end
 
         if reachedEnd or prematureEndRetryCount >= maxPrematureEndRetries then
             PlaySoundCycle()
@@ -544,6 +647,31 @@ local function PlaySoundCycle(isRetryingCurrentSong)
             FinishSong(true)
         end)
     end
+end
+
+-- Immediately swaps whatever is playing for song `index` of the given pack
+-- ("Regular" or "DB"; defaults to the active one) and makes that pack the active
+-- pack. Used by the panel's song dropdowns.
+local function PlaySongAtIndex(index, packName)
+    packName = packName or activePack
+    if not GetSongsForPack(packName)[index] then return end
+
+    activePack = packName
+    playbackGeneration = playbackGeneration + 1
+
+    if currentFadeInTween then
+        currentFadeInTween:Cancel()
+        currentFadeInTween = nil
+    end
+    if currentMusicSound then
+        currentMusicSound:Stop()
+        currentMusicSound:Destroy()
+        currentMusicSound = nil
+    end
+
+    _G.Music    = true
+    musicActive = true
+    task.spawn(PlaySoundCycle, false, index)
 end
 
 if _G.Music then
@@ -720,6 +848,23 @@ task.spawn(function()
         end
     end
 
+    -- The dropdowns / helpers below are assigned further down once the UI exists,
+    -- but the row definitions need to reference them.
+    local regularDropdown
+    local dbDropdown
+    local CloseSongDropdown
+    local RefreshSettingValues
+    local StartDbPackInstall
+
+    -- DB Music Pack (DLC) install state, read from the JSON record and compared
+    -- against the script's pack list every time the panel loads and after every
+    -- install: installed names, and the songs that still need installing.
+    local dbPackInstalledNames, dbPackMissingSongs = GetDbPackStatus()
+    local dbPackInstalling = false
+    local dbPackInstallFailed = false
+    local dbPackInstallDone = 0
+    local dbPackInstallTotal = 0
+
     local settingRowDefinitions = {
         {
             labelText = "Rain",
@@ -762,6 +907,48 @@ task.spawn(function()
                 end
             end,
         },
+        {
+            labelText = "Next Song",
+            isSongPicker = true,
+            dropdownKey = "regular",
+            getValueText = function()
+                return (regularDropdown and regularDropdown.isOpen) and "Close" or "Select"
+            end,
+            onActivated = function()
+                regularDropdown.Toggle()
+            end,
+        },
+        {
+            labelText = "DB Music Pack",
+            tab = "DLC",
+            isSongPicker = true,
+            dropdownKey = "db",
+            getValueText = function()
+                if dbPackInstalling then
+                    return string.format("Installing %d/%d", dbPackInstallDone, dbPackInstallTotal)
+                end
+                if #dbPackMissingSongs > 0 then
+                    if dbPackInstallFailed then
+                        return "Retry"
+                    end
+                    if #dbPackInstalledNames > 0 then
+                        -- Some of the pack is installed but the script has songs
+                        -- that aren't: show how many need installing.
+                        return string.format("%d+ Needs to be installed", #dbPackMissingSongs)
+                    end
+                    return "Install"
+                end
+                return (dbDropdown and dbDropdown.isOpen) and "Close" or "Select"
+            end,
+            onActivated = function()
+                if dbPackInstalling then return end
+                if #dbPackMissingSongs > 0 then
+                    StartDbPackInstall()
+                    return
+                end
+                dbDropdown.Toggle()
+            end,
+        },
     }
 
     local nextSound = Instance.new("Sound")
@@ -786,6 +973,12 @@ task.spawn(function()
     local normalTextColor = Color3.fromRGB(255, 255, 255)
     local selectedTextColor = Color3.fromRGB(88, 56, 16)
 
+    -- The panel grew by one row (Next Song), so it is made taller and every row
+    -- is scaled down by the same ratio - rows keep their old size on screen.
+    local panelHeightScale  = 0.48
+    local panelRowScale     = 0.16 * 0.4 / panelHeightScale
+    local panelPaddingScale = 0.02 * 0.4 / panelHeightScale
+
     local settingsPanelOpenPosition = UDim2.new(0.73, 0, 0.5, 0)
     local settingsPanelClosedPosition = UDim2.new(1.3, 0, 0.5, 0)
 
@@ -795,12 +988,12 @@ task.spawn(function()
     settingsPanel.BorderSizePixel = 0
     settingsPanel.ZIndex = 2147483647
     settingsPanel.AnchorPoint = Vector2.new(0.5, 0.5)
-    settingsPanel.Size = UDim2.new(0.4, 0, 0.4, 0)
+    settingsPanel.Size = UDim2.new(0.4, 0, panelHeightScale, 0)
     settingsPanel.Position = settingsPanelClosedPosition
     settingsPanel.Parent = overlayGui
 
     local panelListLayout = Instance.new("UIListLayout")
-    panelListLayout.Padding = UDim.new(0.02, 0)
+    panelListLayout.Padding = UDim.new(panelPaddingScale, 0)
     panelListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     panelListLayout.Parent = settingsPanel
 
@@ -809,7 +1002,7 @@ task.spawn(function()
     headerBar.LayoutOrder = 0
     headerBar.BackgroundColor3 = headerColor
     headerBar.BorderSizePixel = 0
-    headerBar.Size = UDim2.new(1, 0, 0.16, 0)
+    headerBar.Size = UDim2.new(1, 0, panelRowScale, 0)
     headerBar.Parent = settingsPanel
 
     local headerStroke = Instance.new("UIStroke")
@@ -818,23 +1011,49 @@ task.spawn(function()
     headerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     headerStroke.Parent = headerBar
 
-    local headerTitle = Instance.new("TextLabel")
-    headerTitle.Name = "HeaderTitle"
-    headerTitle.BackgroundTransparency = 1
-    headerTitle.AnchorPoint = Vector2.new(0.5, 0.5)
-    headerTitle.Position = UDim2.new(0.5, 0, 0.5, 0)
-    headerTitle.Size = UDim2.new(0.9, 0, 0.6, 0)
-    headerTitle.FontFace = settingsFont
-    headerTitle.Text = "Settings"
-    headerTitle.TextColor3 = normalTextColor
-    headerTitle.TextStrokeColor3 = Color3.new(0, 0, 0)
-    headerTitle.TextStrokeTransparency = 0
-    headerTitle.TextScaled = true
-    headerTitle.Parent = headerBar
+    -- Header tabs. Click a tab to switch pages: "Settings" holds the settings rows
+    -- and "DLC" holds the DLC options (rows tagged tab = "DLC"). SetActiveTab is
+    -- assigned further down, once the Apply/Close buttons it needs to toggle exist.
+    local tabNames = { "Settings", "DLC" }
+    local activeTabName = "Settings"
+    local tabButtons = {}
+    local SetActiveTab
 
-    local headerTextConstraint = Instance.new("UITextSizeConstraint")
-    headerTextConstraint.MaxTextSize = 28
-    headerTextConstraint.Parent = headerTitle
+    for tabIndex, tabName in ipairs(tabNames) do
+        local tabButton = Instance.new("TextButton")
+        tabButton.Name = "Tab_" .. tabName
+        tabButton.AutoButtonColor = false
+        tabButton.BorderSizePixel = 0
+        tabButton.BackgroundColor3 = headerColor
+        tabButton.Position = UDim2.new((tabIndex - 1) / #tabNames, 0, 0, 0)
+        tabButton.Size = UDim2.new(1 / #tabNames, 0, 1, 0)
+        tabButton.FontFace = settingsFont
+        tabButton.Text = tabName
+        tabButton.TextColor3 = normalTextColor
+        tabButton.TextStrokeColor3 = Color3.new(0, 0, 0)
+        tabButton.TextStrokeTransparency = 0
+        tabButton.TextScaled = true
+        tabButton.Parent = headerBar
+
+        local tabPadding = Instance.new("UIPadding")
+        tabPadding.PaddingTop = UDim.new(0.2, 0)
+        tabPadding.PaddingBottom = UDim.new(0.2, 0)
+        tabPadding.PaddingLeft = UDim.new(0.05, 0)
+        tabPadding.PaddingRight = UDim.new(0.05, 0)
+        tabPadding.Parent = tabButton
+
+        local tabTextConstraint = Instance.new("UITextSizeConstraint")
+        tabTextConstraint.MaxTextSize = 26
+        tabTextConstraint.Parent = tabButton
+
+        tabButton.Activated:Connect(function()
+            if activeTabName == tabName then return end
+            playNextSound()
+            SetActiveTab(tabName)
+        end)
+
+        tabButtons[tabName] = tabButton
+    end
 
     local settingRows = {}
     local selectedRowIndex = 1
@@ -855,7 +1074,11 @@ task.spawn(function()
         rowButton.Text = ""
         rowButton.BackgroundColor3 = rowBackgroundColor
         rowButton.BorderSizePixel = 0
-        rowButton.Size = UDim2.new(1, 0, 0.16, 0)
+        rowButton.Size = UDim2.new(1, 0, panelRowScale, 0)
+        if rowDefinition.isSongPicker then
+            -- Keeps the dropdown (a child of this row) drawn above the rows below it.
+            rowButton.ZIndex = 10
+        end
         rowButton.Parent = settingsPanel
 
         local rowStroke = Instance.new("UIStroke")
@@ -931,6 +1154,9 @@ task.spawn(function()
         rowButton.Activated:Connect(function()
             playNextSound()
             selectedRowIndex = rowIndex
+            if not rowDefinition.isSongPicker then
+                CloseSongDropdown()
+            end
             rowDefinition.onActivated()
             valueLabel.Text = rowDefinition.getValueText()
             refreshRowVisuals()
@@ -939,21 +1165,226 @@ task.spawn(function()
         settingRows[rowIndex] = {
             highlight = highlight,
             label = label,
+            valueLabel = valueLabel,
+            getValueText = rowDefinition.getValueText,
         }
+
+        return rowButton
     end
 
+    local dropdownHostButtons = {}
+    local settingRowButtons = {}
     for rowIndex, rowDefinition in ipairs(settingRowDefinitions) do
-        createSettingRow(rowIndex, rowDefinition)
+        local createdRowButton = createSettingRow(rowIndex, rowDefinition)
+        table.insert(settingRowButtons, { button = createdRowButton, tab = rowDefinition.tab or "Settings" })
+        if rowDefinition.dropdownKey then
+            dropdownHostButtons[rowDefinition.dropdownKey] = createdRowButton
+        end
+    end
+
+    RefreshSettingValues = function()
+        for _, rowVisuals in ipairs(settingRows) do
+            rowVisuals.valueLabel.Text = rowVisuals.getValueText()
+        end
     end
 
     refreshRowVisuals()
 
+    -- ===== Song dropdowns ====================================================
+    -- A dropdown hangs off a row and lists one pack's songs. Picking a song plays
+    -- it straight away and makes that pack the active one (the other pack is
+    -- switched off). Used for "Next Song" (regular pack, Settings tab) and for
+    -- "DB Music Pack" (DLC tab, once installed). The playing song is highlighted.
+    local songDropdownVisibleItems = 4.5
+    local songDropdownItemGap = 2
+    local songHoverColor = Color3.fromRGB(104, 72, 60)
+
+    local function PlaySelectedSong(songIndex, packName)
+        -- If music was switched off in the Music Volume row, picking a song turns
+        -- it back on (at Max) and updates that row so the panel stays truthful.
+        if musicVolumeOptions[musicVolumeIndex].value == "Disabled" then
+            musicVolumeIndex = 1
+            settingsState.musicVolume = musicVolumeOptions[musicVolumeIndex].value
+            SetMusicVolume(settingsState.musicVolume)
+            RefreshSettingValues()
+        end
+        PlaySongAtIndex(songIndex, packName)
+    end
+
+    local function CreateSongDropdown(hostRowButton, songs, packName)
+        local dropdown = { isOpen = false }
+
+        local dropdownFrame = Instance.new("ScrollingFrame")
+        dropdownFrame.Name = packName .. "SongDropdown"
+        dropdownFrame.Visible = false
+        dropdownFrame.Active = true
+        dropdownFrame.BackgroundColor3 = valueBoxColor
+        dropdownFrame.BorderSizePixel = 0
+        dropdownFrame.Position = UDim2.new(0, 0, 1, 2)
+        dropdownFrame.Size = UDim2.new(1, 0, 0, 150)
+        dropdownFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        dropdownFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        dropdownFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+        dropdownFrame.ScrollBarThickness = 5
+        dropdownFrame.ScrollBarImageColor3 = rowStrokeColor
+        dropdownFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+        dropdownFrame.ZIndex = 3
+        dropdownFrame.Parent = hostRowButton
+
+        local dropdownStroke = Instance.new("UIStroke")
+        dropdownStroke.Color = rowStrokeColor
+        dropdownStroke.Thickness = 1
+        dropdownStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        dropdownStroke.Parent = dropdownFrame
+
+        local dropdownLayout = Instance.new("UIListLayout")
+        dropdownLayout.Padding = UDim.new(0, songDropdownItemGap)
+        dropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        dropdownLayout.Parent = dropdownFrame
+
+        local itemButtons = {}
+
+        local function RefreshVisuals()
+            local isThisPackPlaying = musicActive
+                and activePack == packName
+                and musicVolumeOptions[musicVolumeIndex].value ~= "Disabled"
+            local playingIndex = isThisPackPlaying and currentSongIndex or nil
+            for songIndex, itemButton in ipairs(itemButtons) do
+                local isPlaying = songIndex == playingIndex
+                itemButton.BackgroundColor3 = isPlaying and highlightColor or rowBackgroundColor
+                itemButton.TextColor3 = isPlaying and selectedTextColor or normalTextColor
+            end
+        end
+
+        local function LayoutItems()
+            local itemHeight = math.max(24, math.floor(hostRowButton.AbsoluteSize.Y * 0.8))
+            for _, itemButton in ipairs(itemButtons) do
+                itemButton.Size = UDim2.new(1, 0, 0, itemHeight)
+            end
+            local visibleItems = math.min(#itemButtons, songDropdownVisibleItems)
+            dropdownFrame.Size = UDim2.new(1, 0, 0, math.floor(visibleItems * (itemHeight + songDropdownItemGap)))
+        end
+
+        for songIndex, songEntry in ipairs(songs) do
+            local itemButton = Instance.new("TextButton")
+            itemButton.Name = "SongItem" .. songIndex
+            itemButton.LayoutOrder = songIndex
+            itemButton.AutoButtonColor = false
+            itemButton.BackgroundColor3 = rowBackgroundColor
+            itemButton.BorderSizePixel = 0
+            itemButton.Size = UDim2.new(1, 0, 0, 32)
+            itemButton.FontFace = settingsFont
+            itemButton.Text = songEntry.name
+            itemButton.TextColor3 = normalTextColor
+            itemButton.TextStrokeColor3 = Color3.new(0, 0, 0)
+            itemButton.TextStrokeTransparency = 0
+            itemButton.TextScaled = true
+            itemButton.TextXAlignment = Enum.TextXAlignment.Left
+            itemButton.ZIndex = 4
+            itemButton.Parent = dropdownFrame
+
+            local itemPadding = Instance.new("UIPadding")
+            itemPadding.PaddingLeft = UDim.new(0, 8)
+            itemPadding.PaddingRight = UDim.new(0, 8)
+            itemPadding.Parent = itemButton
+
+            local itemTextConstraint = Instance.new("UITextSizeConstraint")
+            itemTextConstraint.MaxTextSize = 18
+            itemTextConstraint.Parent = itemButton
+
+            itemButton.MouseEnter:Connect(function()
+                if itemButton.BackgroundColor3 ~= highlightColor then
+                    itemButton.BackgroundColor3 = songHoverColor
+                end
+            end)
+            itemButton.MouseLeave:Connect(RefreshVisuals)
+
+            itemButton.Activated:Connect(function()
+                playNextSound()
+                CloseSongDropdown()
+                PlaySelectedSong(songIndex, packName)
+            end)
+
+            itemButtons[songIndex] = itemButton
+        end
+
+        hostRowButton:GetPropertyChangedSignal("AbsoluteSize"):Connect(LayoutItems)
+        LayoutItems()
+
+        function dropdown.Close()
+            dropdown.isOpen = false
+            dropdownFrame.Visible = false
+        end
+
+        function dropdown.Toggle()
+            if dropdown.isOpen then
+                dropdown.Close()
+                return
+            end
+            dropdown.isOpen = true
+            LayoutItems()
+            RefreshVisuals()
+            dropdownFrame.CanvasPosition = Vector2.new(0, 0)
+            dropdownFrame.Visible = true
+        end
+
+        return dropdown
+    end
+
+    regularDropdown = CreateSongDropdown(dropdownHostButtons.regular, musicSongs, "Regular")
+    dbDropdown = CreateSongDropdown(dropdownHostButtons.db, dbSongs, "DB")
+
+    CloseSongDropdown = function()
+        regularDropdown.Close()
+        dbDropdown.Close()
+        RefreshSettingValues()
+    end
+
+    -- Installs whatever pack songs are missing, in the background, showing
+    -- progress on the DLC row ("Installing 1/3"). Each finished song is written
+    -- to the JSON record straight away, so it stays accurate even if the install
+    -- is interrupted. Afterwards the script's pack list is checked against the
+    -- record again: all installed -> the row becomes the song dropdown; anything
+    -- still missing -> "Retry" (after a failure) or "N+ Needs to be installed".
+    StartDbPackInstall = function()
+        if dbPackInstalling then return end
+        local songsToInstall = dbPackMissingSongs
+        if #songsToInstall == 0 then return end
+
+        dbPackInstalling = true
+        dbPackInstallFailed = false
+        dbPackInstallDone = 0
+        dbPackInstallTotal = #songsToInstall
+        RefreshSettingValues()
+
+        task.spawn(function()
+            for _, songEntry in ipairs(songsToInstall) do
+                local installOk, installError = pcall(function()
+                    InstallDbPackSong(songEntry)
+                    RecordDbPackSongInstalled(songEntry.name)
+                end)
+                if not installOk then
+                    warn("[DB Music Pack] Couldn't install " .. songEntry.name .. ": " .. tostring(installError))
+                    dbPackInstallFailed = true
+                    break
+                end
+                dbPackInstallDone = dbPackInstallDone + 1
+                RefreshSettingValues()
+            end
+
+            dbPackInstalledNames, dbPackMissingSongs = GetDbPackStatus()
+            dbPackInstalling = false
+            RefreshSettingValues()
+        end)
+    end
+    -- =========================================================================
+
     local buttonRow = Instance.new("Frame")
     buttonRow.Name = "ButtonRow"
-    buttonRow.LayoutOrder = #settingRowDefinitions + 1
+    buttonRow.LayoutOrder = #settingRowDefinitions + 2
     buttonRow.BackgroundTransparency = 1
     buttonRow.BorderSizePixel = 0
-    buttonRow.Size = UDim2.new(1, 0, 0.16, 0)
+    buttonRow.Size = UDim2.new(1, 0, panelRowScale, 0)
     buttonRow.Parent = settingsPanel
 
     local function createActionButton(buttonName, buttonText, horizontalAlignment)
@@ -988,6 +1419,61 @@ task.spawn(function()
 
     local applyButton = createActionButton("ApplyButton", "Apply", 0)
     local closeButton = createActionButton("CloseButton", "Close", 1)
+
+    -- DLC tab spacer. While the DLC tab is showing, the Settings rows are hidden
+    -- and only the DLC option(s) show. This invisible block fills the height the
+    -- hidden rows leave behind, so the panel (and the Close button) doesn't jump
+    -- around when switching tabs.
+    local settingsTabRowCount = 0
+    local dlcTabRowCount = 0
+    for _, rowDefinition in ipairs(settingRowDefinitions) do
+        if rowDefinition.tab == "DLC" then
+            dlcTabRowCount = dlcTabRowCount + 1
+        else
+            settingsTabRowCount = settingsTabRowCount + 1
+        end
+    end
+    local missingRowCount = math.max(settingsTabRowCount - dlcTabRowCount, 0)
+
+    local dlcSpacer = Instance.new("Frame")
+    dlcSpacer.Name = "DlcSpacer"
+    dlcSpacer.LayoutOrder = #settingRowDefinitions + 1
+    dlcSpacer.BackgroundTransparency = 1
+    dlcSpacer.BorderSizePixel = 0
+    dlcSpacer.Size = UDim2.new(1, 0, missingRowCount * panelRowScale + math.max(missingRowCount - 1, 0) * panelPaddingScale, 0)
+    dlcSpacer.Visible = false
+    dlcSpacer.Parent = settingsPanel
+
+    SetActiveTab = function(tabName)
+        activeTabName = tabName
+        CloseSongDropdown()
+
+        local isSettingsTab = tabName == "Settings"
+        for _, rowEntry in ipairs(settingRowButtons) do
+            rowEntry.button.Visible = rowEntry.tab == tabName
+        end
+        dlcSpacer.Visible = tabName == "DLC"
+        applyButton.Visible = isSettingsTab
+
+        -- Keep the yellow row highlight on a row that is actually showing.
+        local selectedEntry = settingRowButtons[selectedRowIndex]
+        if not selectedEntry or selectedEntry.tab ~= tabName then
+            for rowIndex, rowEntry in ipairs(settingRowButtons) do
+                if rowEntry.tab == tabName then
+                    selectedRowIndex = rowIndex
+                    break
+                end
+            end
+            refreshRowVisuals()
+        end
+
+        for name, tabButton in pairs(tabButtons) do
+            local isActive = name == tabName
+            tabButton.BackgroundColor3 = isActive and highlightColor or headerColor
+            tabButton.TextColor3 = isActive and selectedTextColor or normalTextColor
+        end
+    end
+    SetActiveTab("Settings")
 
     local applyButtonScale = Instance.new("UIScale")
     applyButtonScale.Scale = 1
@@ -1067,6 +1553,7 @@ task.spawn(function()
 
     local function Open()
         cancelActiveTweens()
+        CloseSongDropdown()
 
         borderImage.Size = UDim2.new(4, 0, 4, 0)
         characterImage.Position = UDim2.new(0, 0, 0, 945)
@@ -1101,6 +1588,7 @@ task.spawn(function()
 
     local function Exit()
         cancelActiveTweens()
+        CloseSongDropdown()
 
         playTween(characterImage, descendTweenInfo, {
             Position = UDim2.new(0, 0, 0, 945),
@@ -1988,7 +2476,7 @@ task.spawn(function()
 
     local texts = {
         "SAIYAN RAGE",
-        "LEGENDARY SUPER SAIYAN",
+        "DIETY'S VERDICT",
         "SAIYAN INSTINCT",
     }
 
