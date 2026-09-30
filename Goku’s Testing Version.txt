@@ -403,6 +403,7 @@ local musicSongs = {
     { name = "oh god not this shit again", file = "OhGodNotThisShitAgain.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/oh%20god%20not%20this%20shit%20again%20(feat.%20RIVR%20PERSN).mp3" },
     { name = "EYEDRESS - JEALOUS", file = "EyedressJealous.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/EYEDRESS%20-%20JEALOUS%20(OFFICIAL%20VIDEO).mp3" },
     { name = "oblivion", file = "oblivion.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/hozuki%2C%20cornwave%20-%20oblivion.mp3" },
+    { name = "where am i supposed to go", file = "WhereAmISupposedToGo.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/where%20am%20i%20supposed%20to%20go.mp3" },
 }
 
 local function DownloadSongFile(url, filename)
