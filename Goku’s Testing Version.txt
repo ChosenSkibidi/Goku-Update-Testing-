@@ -524,7 +524,7 @@ local function PlaySoundCycle(isRetryingCurrentSong)
         FinishSong(reachedEnd)
     end)
 
-    if entry.name:lower() == "lucy~" then
+    if entry.name:lower():find("lucy~", 1, true) then
         task.spawn(function()
             while not songFinished and musicActive and sound.Parent and sound.TimePosition < LucyFadeOutStart do
                 task.wait(0.1)
@@ -695,7 +695,7 @@ task.spawn(function()
 
         local activeSound = currentMusicSound
         if activeSound and activeSound.Parent then
-            local inLucyFadeOut = activeSound.Name:lower() == "lucy~" and activeSound.TimePosition >= LucyFadeOutStart
+            local inLucyFadeOut = activeSound.Name:lower():find("lucy~", 1, true) ~= nil and activeSound.TimePosition >= LucyFadeOutStart
             if not inLucyFadeOut then
                 activeSound.Volume = newVolume
             end
