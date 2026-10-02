@@ -390,12 +390,12 @@ local LucySongCap            = 66
 local LucyFadeOutStart       = 60
 
 local musicSongs = {
-    { name = "Asleep In Space 2", file = "AsleepInSpace2.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Goku-Version-2/refs/heads/main/Asleep%20In%20Space%202.mp3" },
+    { name = "Asleep In Space", file = "AsleepInSpace2.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Goku-Version-2/refs/heads/main/Asleep%20In%20Space%202.mp3" },
     { name = "9 - Dean Blunt", file = "DeanBluntSlowed.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/9%20-%20Dean%20Blunt%20(Slowed).mp3" },
     { name = "Waiting for You~", file = "WaitingForYou.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Waiting%20for%20You%7E.mp3" },
     { name = "do i clench my fists?", file = "ClenchMyFists.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/do%20i%20clench%20my%20fists%3F.mp3" },
     { name = "Corbon Amodio - lucy~", file = "Lucy.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/lucy%7E.mp3" },
-    { name = "im a mistake", file = "ImAMistake.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Im%20a%20mistake.mp3" },
+    { name = "Mistake", file = "ImAMistake.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Im%20a%20mistake.mp3" },
     { name = "resonance - home", file = "ResonanceHome.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/resonance%20-%20home%20(slowed%20%26%20reverb).mp3" },
     { name = "Clouds", file = "Clouds.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/Clouds.mp3" },
     { name = "yves tumor - limerence", file = "YvesTumorLimerence.mp3", url = "https://raw.githubusercontent.com/NetlessScripter/Songs/refs/heads/main/yves%20tumor%20-%20limerence%20(instrumental).mp3" },
@@ -406,6 +406,9 @@ local musicSongs = {
     { name = "where am i supposed to go", file = "WhereAmISupposedToGo.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/where%20am%20i%20supposed%20to%20go.mp3" },
     { name = "The Path Less Travelled", file = "ThePathLessTravelled.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/The%20Path%20Less%20Travelled.mp3" },
     { name = "Sarah", file = "Sarah.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Sarah.mp3" },
+    { name = "Kanye West - Flashing Lights", file = "FlashingLights.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/VIP-SCRIPTS/refs/heads/main/Kanye%20West%20-%20Flashing%20Lights%20ft.%20Dwele.mp3" },
+    { name = "Harvey", file = "Harvey.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Harvey.mp3" },
+    { name = "Warmpop", file = "Warmpop.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/ESPRIT%20%E7%A9%BA%E6%83%B3%2C%20George%20Clanton%20-%20Warmpop.mp3" },
 }
 
 -- Dragon Ball music pack (DLC). Downloaded on demand from the panel's DLC tab.
@@ -2476,9 +2479,9 @@ task.spawn(function()
     end
 
     local texts = {
-        "SAIYAN RAGE",
+        "THE SOVEREIGN OF DIVINITY",
         "DIETY'S VERDICT",
-        "SAIYAN INSTINCT",
+        "THE ZENITH OF STRENGTH",
     }
 
     local function typeText(text, duration)
