@@ -405,6 +405,7 @@ local musicSongs = {
     { name = "oblivion", file = "oblivion.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/hozuki%2C%20cornwave%20-%20oblivion.mp3" },
     { name = "where am i supposed to go", file = "WhereAmISupposedToGo.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/where%20am%20i%20supposed%20to%20go.mp3" },
     { name = "The Path Less Travelled", file = "ThePathLessTravelled.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/The%20Path%20Less%20Travelled.mp3" },
+    { name = "Sarah", file = "Sarah.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Sarah.mp3" },
 }
 
 -- Dragon Ball music pack (DLC). Downloaded on demand from the panel's DLC tab.
