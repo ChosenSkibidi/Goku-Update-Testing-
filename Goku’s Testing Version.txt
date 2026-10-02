@@ -544,8 +544,22 @@ local function GetSongsForPack(packName)
 end
 
 local function FindSongIndexByName(name)
-    for i, song in ipairs(GetSongsForPack(activePack)) do
-        if song.name:lower() == name:lower() then
+    local songs = GetSongsForPack(activePack)
+    local wanted = name:lower():gsub("^%s+", ""):gsub("%s+$", "")
+    -- 1) exact name, 2) exact file name (with or without .mp3), 3) name contains the text
+    for i, song in ipairs(songs) do
+        if song.name:lower() == wanted then
+            return i
+        end
+    end
+    for i, song in ipairs(songs) do
+        local fileLower = song.file:lower()
+        if fileLower == wanted or fileLower:gsub("%.mp3$", "") == wanted then
+            return i
+        end
+    end
+    for i, song in ipairs(songs) do
+        if song.name:lower():find(wanted, 1, true) then
             return i
         end
     end
@@ -582,6 +596,9 @@ local function PlaySoundCycle(isRetryingCurrentSong, forcedSongIndex)
         if not usedStartingSong then
             usedStartingSong = true
             local startIndex = (typeof(_G.StartingSong) == "string" and _G.StartingSong ~= "") and FindSongIndexByName(_G.StartingSong)
+            if typeof(_G.StartingSong) == "string" and _G.StartingSong ~= "" and not startIndex then
+                warn("[Music] StartingSong \"" .. _G.StartingSong .. "\" didn't match any song, picking randomly")
+            end
             currentSongIndex = startIndex or PickNextSongIndex()
         else
             currentSongIndex = PickNextSongIndex()
@@ -2479,9 +2496,9 @@ task.spawn(function()
     end
 
     local texts = {
-        "THE SOVEREIGN OF DIVINITY",
+        "SAIYAN RAGE",
         "DIETY'S VERDICT",
-        "THE ZENITH OF STRENGTH",
+        "SAIYAN INSTINCT",
     }
 
     local function typeText(text, duration)
