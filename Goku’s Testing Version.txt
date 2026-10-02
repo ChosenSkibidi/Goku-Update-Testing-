@@ -2496,9 +2496,9 @@ task.spawn(function()
     end
 
     local texts = {
-        "SAIYAN RAGE",
+        "THE SOVEREIGN OF DIVINITY",
         "DIETY'S VERDICT",
-        "SAIYAN INSTINCT",
+        "THE ZENITH OF STRENGTH",
     }
 
     local function typeText(text, duration)
