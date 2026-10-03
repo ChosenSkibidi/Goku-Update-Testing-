@@ -820,7 +820,7 @@ task.spawn(function()
     }
 
     local graphicsQualityOptions = {"Performance", "Medium", "Max"}
-    local graphicsQualityLevels = { Performance = 1, Medium = 5, Max = 10 }
+    local graphicsQualityLevels = { Performance = 1, Medium = 6, Max = 10 }
     local graphicsQualityIndex = 3
     for optionIndex, optionName in ipairs(graphicsQualityOptions) do
         if optionName:lower() == tostring(_G.SunsetQualityState):lower() then
