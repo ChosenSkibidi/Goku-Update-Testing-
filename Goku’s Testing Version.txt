@@ -408,6 +408,7 @@ local musicSongs = {
     { name = "Sarah", file = "Sarah.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Sarah.mp3" },
     { name = "Kanye West - Flashing Lights", file = "FlashingLights.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/VIP-SCRIPTS/refs/heads/main/Kanye%20West%20-%20Flashing%20Lights%20ft.%20Dwele.mp3" },
     { name = "Harvey", file = "Harvey.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/Harvey.mp3" },
+    { name = "simpsonwave 1995 - FRANK.JAVCEE", file = "simpsonwave.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/simpsonwave%201995%20(slowed).mp3" },
     { name = "Warmpop", file = "Warmpop.mp3", url = "https://raw.githubusercontent.com/ChosenSkibidi/Goku-Update-Testing-/refs/heads/main/ESPRIT%20%E7%A9%BA%E6%83%B3%2C%20George%20Clanton%20-%20Warmpop.mp3" },
 }
 
